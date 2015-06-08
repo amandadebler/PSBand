@@ -143,8 +143,19 @@ $largeIconBitmap = New-Object -TypeName System.Windows.Media.Imaging.WriteableBi
 $smallBandIcon = [Microsoft.Band.WriteableBitmapExtensions]::ToBandIcon($smallIconBitmap)
 
 $myBandTile = new-object -TypeName Microsoft.Band.Tiles.BandTile -ArgumentList $tileGuid
-$MSBandClient.SendMessageAsync($tileGuid, "Test", "This is just a test.", [System.DateTimeOffset]::Now, [Microsoft.Band.Notifications.MessageFlags]::ShowDialog)
 $myBandTile
+
+}
+
+function Send-MSBandMessage {
+Param(
+    $bandClient = $MSBandClient
+    ,[Microsoft.Band.Tiles.BandTile]$tile
+    ,[string]$messageTitle = "Howdy, y'all!"
+    ,[string]$messageBody = "Hope you're all having as much fun as I am!"
+
+    )
+    $MSBandClient.SendMessageAsync($tile, $messageTitle, $messageBody, [System.DateTimeOffset]::Now, [Microsoft.Band.Notifications.MessageFlags]::ShowDialog)
 }
 
 function ConvertTo-BitMapSource {
@@ -153,5 +164,5 @@ function ConvertTo-BitMapSource {
     $bitmap = [System.Drawing.Bitmap]::FromFile($bitmapFile)
     $hBitmap = $bitmap.GetHbitmap()
     $bitmapSource = [System.Windows.Interop.Imaging]::CreateBitmapSourceFromHBitmap($hBitmap, [System.IntPtr]::Zero, [System.Windows.Int32Rect]::Empty, [System.Windows.Media.Imaging.BitmapSizeOptions]::FromEmptyOptions())
-    
+    $bitmapSource
 }
