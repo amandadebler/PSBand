@@ -44,11 +44,29 @@ function Get-MSBandVibrationType {
 function Send-MSBandVibration {
 Param(
     $bandClient = $MSBandClient
-   ,[ValidateSet({[Microsoft.Band.Notifications.VibrationType].GetEnumNames()})][string]$vibrationType='NotificationOneTone'
+   ,[ValidateSet(
+        'NotificationOneTone'
+        ,'NotificationTwoTone'
+        ,'NotificationAlarm'
+        ,'NotificationTimer'
+        ,'OneToneHigh'
+        ,'TwoToneHigh'
+        ,'ThreeToneHigh'
+        ,'RampUp'
+        ,'RampDown'
+            )][string]$vibrationType='NotificationOneTone'
    )
 
     $bandClient.VibrateAsync([Microsoft.Band.Notifications.VibrationType]::$vibrationType)
 
+}
+
+Function Test-MSBandVibration {
+Param ($bandClient = $MSBandClient)
+    foreach ($vibe in (Get-MSBandVibrationType)) { 
+    Write-Output "$vibe"
+    Send-MSBandVibration -bandClient $bandClient -vibrationType $vibe
+    Start-Sleep -Seconds 2 }
 }
 
 # Colors for your themes - BandColor objects have R(ed), G(reen) and B(lue) parameters.
@@ -56,6 +74,57 @@ Param(
 $red = New-Object Microsoft.Band.BandColor -ArgumentList 150,0,0
 $limeGreen = New-Object Microsoft.Band.BandColor -ArgumentList 0,255,0
 $yuckyGreen = New-Object Microsoft.Band.BandColor -ArgumentList 130,178,63
+$myBaseBlue = New-Object Microsoft.Band.BandColor -ArgumentList 0,182,238
+
+function Get-MSBandTheme {
+Param($bandClient = $MSBandClient)
+    $bandClient.GetThemeAsync().Result
+}
+
+<#
+Base is the general Tile color
+Highlight is the headline text color when you press an icon ("Start a run" on the Run icon)
+and the flashing arrow to press the little action button on the right
+Lowlight
+
+Use: Set-MSBandTheme -bandClient $myBand -Highlight $yuckyGreen
+Set-MSBandTheme -bandClient $myBand -Highlight (new-object Microsoft.Band.BandColor -ArgumentList 65,214,255)
+#>
+
+function Set-MSBandTheme {
+Param($bandClient = $MSBandClient
+    ,[Microsoft.Band.BandColor]$Base
+    ,[Microsoft.Band.BandColor]$Highlight
+    ,[Microsoft.Band.BandColor]$Lowlight
+    ,[Microsoft.Band.BandColor]$SecondaryText
+    ,[Microsoft.Band.BandColor]$HighContrast
+    ,[Microsoft.Band.BandColor]$Muted)
+    $currentTheme = Get-MSBandTheme -bandClient $bandClient
+    $newTheme = $currentTheme
+    if ($Base -ne $null) {
+        $newTheme.Base = $Base
+    }
+    if ($Highlight -ne $null) {
+        $newTheme.Highlight = $Highlight
+    }
+    if ($Lowlight -ne $null) {
+        $newTheme.Lowlight = $Lowlight
+    }
+    if ($SecondaryText -ne $null) {
+        $newTheme.SecondaryText = $SecondaryText
+    }
+    if ($HighContrast -ne $null) {
+        $newTheme.HighContrast = $HighContrast
+    }
+    if ($Muted -ne $null) {
+        $newTheme.Muted = $Muted
+    }
+    $bandClient.SetThemeAsync($newTheme)
+}
+
+# One free Internet for the person who figures out how to turn a bmp/jpg/whatever into
+# a WriteableBitmap that this BandTile object requires, and thus lets me send annoying
+# messages to the Band...
 
 function New-MSBandTile {
 Param(
